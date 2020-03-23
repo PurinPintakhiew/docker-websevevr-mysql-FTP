@@ -1,0 +1,55 @@
+version: '3.1'
+
+services: 
+    www:
+        build: .
+        ports: 
+            - "8001:80"
+        volumes:
+            - ./www:/var/www/html/
+        links:
+            - db
+        networks:
+            - default
+    db:
+        image: mysql:8.0
+        ports: 
+            - "3306:3306"
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            MYSQL_DATABASE: myDb
+            MYSQL_USER: user
+            MYSQL_PASSWORD: test
+            MYSQL_ROOT_PASSWORD: test 
+        volumes:
+            - ./dump:/docker-entrypoint-initdb.d
+            - ./conf:/etc/mysql/conf.d
+            - persistent:/var/lib/mysql
+        networks:
+            - default
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        links: 
+            - db:db
+        ports:
+            - 8000:80
+        environment:
+            MYSQL_USER: user
+            MYSQL_PASSWORD: test
+            MYSQL_ROOT_PASSWORD: test
+    ftpd_server:
+        image: stilliard/pure-ftpd
+        container_name: pure-ftpd2
+        ports:
+            - "21:21"
+            - "30000-30009:30000-30009"
+        volumes:
+            - "./data:/home/Tang/"
+        environment: 
+            PUBLICHOST: "192.168.43.39"
+            FTP_USER_NAME: "Tang"
+            FTP_USER_PASS: 1234
+            FTP_USER_HOME: /home/Tang
+            restart: always     
+volumes:
+    persistent:
